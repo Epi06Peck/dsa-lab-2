@@ -1,20 +1,21 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
 struct User {
     string username;
     string password; 
-    string role;
+    vector<string> permissions;
     User* next;
     
-    User(const string& u,const string& p,const string& r = "viewer") {
+    User(const string& u,const string& p,const vector<string>& perm = {"view"}) {
         username = u;
         password = p;
-        role = r;
+        permissions = perm;
         next = nullptr;
     }
 };
-bool insertUser (User*& head, const string& username, const string& password, const string& role = "viewer");
+bool insertUser (User*& head, const string& username, const string& password, const vector<string>& permissions = {"view"});
 void printUsers (User* head);
 User* findUser(User* head, const string& username);
 bool authorize (User* head, const string& username, const string& action);
@@ -24,8 +25,8 @@ int main () {
 
     User* head = nullptr;
 
-    insertUser(head, "Epi", "GEORgeP$#rice", "admin");
-    insertUser(head, "Yessenia", "philip#!AUson", "editor");
+    insertUser(head, "Epi", "GEORgeP$#rice", {"edit", "create", "delete", "view"});
+    insertUser(head, "Yessenia", "philip#!AUson", {"edit", "create" , "view"});
     insertUser(head, "Pat", "Guestpass");
 
     // test to see if new user defaults to "viewer".
@@ -40,9 +41,9 @@ int main () {
 
     return 0;
 }
-bool insertUser (User*& head, const string& username, const string& password, const string& role) {
+bool insertUser (User*& head, const string& username, const string& password, const vector<string>& permissions) {
     if (head == nullptr) {
-        head = new User(username, password, role);
+        head = new User(username, password, permissions);
         return true;
     }
     User *current = head;
@@ -55,14 +56,18 @@ bool insertUser (User*& head, const string& username, const string& password, co
         }
         current = current->next;
     }
-    current->next = new User(username, password, role);
+    current->next = new User(username, password, permissions);
     return true;
 }
 
 void printUsers (User* head) {
     User* current = head;
     while(current != nullptr) {
-        cout << "Username: " << current->username << ", Role: " << current->role << endl;
+        cout << "Username: " << current->username ;
+        for (const string& perm: current->permissions) {
+            cout << perm << " " ;
+        } 
+        cout << endl;
         current = current->next;
     }
 }
@@ -84,15 +89,10 @@ bool authorize (User* head, const string& username, const string& action) {
         return false;
     }
 
-    string role = user->role;
-
-    if (role == "admin") {
-        return true;
-    } else if(role == "editor") {
-        return (action == "view" || action == "edit" || action == "create");
-    }else if (role == "viewer") {
-        return action == "view";
+    for (const string& permission : user->permissions) {
+        if (permission == action) {
+            return true;
+        }
     }
     return false;
-
 }
