@@ -16,6 +16,8 @@ struct User {
 };
 bool insertUser (User*& head, const string& username, const string& password, const string& role = "viewer");
 void printUsers (User* head);
+User* findUser(User* head, const string& username);
+bool authorize (User* head, const string& username, const string& action);
 
 
 int main () {
@@ -28,6 +30,13 @@ int main () {
 
     // test to see if new user defaults to "viewer".
     printUsers(head);
+
+    // testing if authorization works
+    cout << "Authorization tests: " << endl;
+    cout << "Epi deleting: " << (authorize(head, "Epi", "delete")? "Allowed" : "Denied") << endl;
+    cout << "Yessenia editing: " << (authorize(head, "Yessenia", "edit")? "Allowed" : "Denied") << endl;
+    cout << "Pat editing: " << (authorize(head, "Pat", "edit")? "Allowed" : "Denied") << endl;
+
 
     return 0;
 }
@@ -56,4 +65,34 @@ void printUsers (User* head) {
         cout << "Username: " << current->username << ", Role: " << current->role << endl;
         current = current->next;
     }
+}
+
+User* findUser(User* head, const string& username) {
+    User* temp = head;
+    while (temp != nullptr) {
+        if(temp->username == username) {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    return nullptr;
+}
+
+bool authorize (User* head, const string& username, const string& action) {
+    User* user = findUser(head, username);
+    if(user == nullptr) {
+        return false;
+    }
+
+    string role = user->role;
+
+    if (role == "admin") {
+        return true;
+    } else if(role == "editor") {
+        return (action == "view" || action == "edit" || action == "create");
+    }else if (role == "viewer") {
+        return action == "view";
+    }
+    return false;
+
 }
